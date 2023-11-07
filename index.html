@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lista</title>
+  </head>
+  <body>
+    <ul id="item-list"></ul>
+
+    <script>
+      function addItem(id, text) {
+        const itemList = document.getElementById("item-list");
+        const li = document.createElement("li");
+
+        const input = document.createElement("input");
+        input.value = text;
+        input.addEventListener("keyup", (event) => {
+          if (event.key === "Enter" && input.value.trim() !== "") {
+            changeItem(id, input.value);
+          }
+        });
+
+        const removeLink = document.createElement("a");
+        removeLink.href = "#";
+        removeLink.textContent = "Remove";
+        removeLink.addEventListener("click", () => removeItem(id));
+
+        li.appendChild(input);
+        li.appendChild(removeLink);
+        itemList.appendChild(li);
+      }
+
+      function changeItem(id, newText) {
+        fetch(`/items/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ newText }),
+        }).then((response) => {
+          if (response.status === 200) {
+            const li = document.querySelector(`li:has(input[value='${id}'])`);
+            li.querySelector("input").value = newText;
+          }
+        });
+      }
+
+      function removeItem(id) {
+        fetch(`/items/${id}`, {
+          method: "DELETE",
+        }).then((response) => {
+          if (response.status === 204) {
+            const li = document.querySelector(`li:has(input[value='${id}'])`);
+            li.remove();
+          }
+        });
+      }
+
+      fetch("/items")
+        .then((response) => response.json())
+        .then((data) => {
+          data.forEach((item) => addItem(item.id, item.text));
+        });
+    </script>
+  </body>
+</html>
